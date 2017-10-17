@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
 
 namespace DTS_Project
 {
@@ -9,8 +11,11 @@ namespace DTS_Project
     public class TerminalController
     {
         private ITerminalDevice terminalDevice;
-        private List<Tenant> _tenants = new List<Tenant>();
+        public List<Tenant> _tenants = new List<Tenant>();
         private Tenant _tenant;
+        private SystemAdmin admin = new SystemAdmin();
+
+        public void SetTenants(List<Tenant> t) => _tenants = t;
 
         public TerminalController(ITerminalDevice terminalDevice)
         {
@@ -24,8 +29,7 @@ namespace DTS_Project
             string password = null;
             if (!terminalDevice.GetPassword(ref password)) return;
             // you need to verify the password
-
-            terminalDevice.ShowMainMenuDialog(this);
+            if (admin.verifyPassword(password) == true) terminalDevice.ShowMainMenuDialog(this);
         }
 
         // handlers for MainMenuDialog
@@ -49,7 +53,7 @@ namespace DTS_Project
             string firstName = null;
             string lastName = null;
             if (!terminalDevice.GetTenantName(ref firstName, ref lastName)) return;
-            foreach (Tenant t in _tenants){
+            foreach (Tenant t in _tenants.ToArray()){
                 if (t._firstName.Equals(firstName)){
                     if (t._lastName.Equals(lastName)){
                         _tenants.Remove(t);
@@ -72,32 +76,48 @@ namespace DTS_Project
                     if (t._lastName.Equals(lastName))
                     {
                         _tenant = t;
+                        terminalDevice.ShowTenantMenuDialog(this);
                     }
                 }
             }
-            terminalDevice.ShowTenantMenuDialog(this);
+
         }
 
         public void DisplayTenantList_Handler()
         {
-            terminalDevice.DisplayList(_tenants.ToArray());
+            List<string> tenants = new List<string>();
+            foreach (Tenant t in _tenants){
+                tenants.Add(t.ToString());
+            }
+            terminalDevice.DisplayList(tenants.ToArray());
             // call "void DisplayList(object[] list)" to list Tenants
         }
 
         public void Save_Handler()
         {
-
+            BinaryFormatter fo = new BinaryFormatter();
+            using (FileStream f = new FileStream("DTSsavefile.svf",
+                FileMode.Create, FileAccess.Write))
+            {
+                fo.Serialize(f, _tenants);
+            }
         }
 
         public void Restore_Handler()
         {
-
+            BinaryFormatter fo = new BinaryFormatter();
+            using (FileStream f = new FileStream("DTSsavefile.svf",
+                FileMode.Open, FileAccess.Read))
+            {
+                _tenants = (List<Tenant>)fo.Deserialize(f);
+            }
         }
 
         public void ChangePassword_Handler()
         {
             string password = null;
             if (!terminalDevice.GetPassword(ref password)) return;
+            admin.changePassword(password);
 
         }
 
@@ -150,13 +170,28 @@ namespace DTS_Project
 
         public void DisplayCallList_Handler()
         {
-            terminalDevice.DisplayList(_tenant._calls.ToArray());
+            List<string> temp = new List<string>();
+            foreach (Calls s in _tenant._calls){
+                string call = s.formatCall();
+                temp.Add(call);
+            }
+
+            terminalDevice.DisplayList(temp.ToArray());
             // call  "void DisplayList(object[] list)" to list Calls
         }
 
         public void DisplayBarList_Handler()
         {
-            terminalDevice.DisplayList(_tenant._barredNumbers.ToArray());
+            List<string> barred = new List<string>();
+            foreach(string s in _tenant._barredNumbers)
+            {
+                barred.Add(s);
+            }
+            foreach(string s in _tenant._barredAreaCodes)
+            {
+                barred.Add(s);
+            }
+            terminalDevice.DisplayList(barred.ToArray());
             // call "void DisplayList(object[] list)" to list Bar Numbers
 
         }

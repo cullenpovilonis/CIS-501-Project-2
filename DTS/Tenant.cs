@@ -5,8 +5,9 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace DTS_Project
-{
-    class Tenant
+
+{   [Serializable()]
+    public class Tenant
     {
         public string _firstName { get; set; }
         public string _lastName { get; set; }
@@ -22,8 +23,19 @@ namespace DTS_Project
             _accessCode = code;
         }
 
+
+        public void addCall(Calls call){
+            _calls.Add(call);
+        }
+
+
+        public string ToString(){
+            return (_firstName + " " + _lastName + ". Access Code: " + _accessCode);
+        }
+
+
         public void unbarNumber(string number){
-            foreach(string s in _barredNumbers){
+            foreach(string s in _barredNumbers.ToArray()){
                 if (s == number){
                     _barredNumbers.Remove(s);
                 }
@@ -31,7 +43,7 @@ namespace DTS_Project
         }
 
         public void unbarAreaCode(string number){
-            foreach(string s in _barredAreaCodes){
+            foreach(string s in _barredAreaCodes.ToArray()){
                 if (s == number){
                     _barredAreaCodes.Remove(s);
                 }
@@ -39,7 +51,7 @@ namespace DTS_Project
         }
 
         public void addBarredNumber(string number){
-            if ((!_barredNumbers.Contains(number)) && (number.Length == 10))
+            if (!_barredNumbers.Contains(number))
             {
                 _barredNumbers.Add(number);
                 return;
@@ -49,7 +61,7 @@ namespace DTS_Project
 
 
         public void addBarredAreaCode(string number){
-            if ((!_barredAreaCodes.Contains(number)) && (number.Length == 3))
+            if (!_barredAreaCodes.Contains(number))
             {
                 _barredAreaCodes.Add(number);
                 return;
@@ -58,15 +70,20 @@ namespace DTS_Project
         }
 
 
-        bool checkNumbers(List<string> barred, string call){
+        public bool checkNumbers(List<string> barred, string call){
             foreach(string s in barred){
-                if (s == call)
-                {
-                    return false;
-                }
+                if (s == call) return false;
                 else return true;
             }
             return true;
         }
+
+        public bool checkBar(string area, string prefix, string number){
+            string bar = (area + prefix + number).ToString();
+            if (_barredNumbers.Contains(bar) || _barredAreaCodes.Contains(area)) return true;
+            else return false;
+
+        }
+
     }
 }

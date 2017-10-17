@@ -6,8 +6,10 @@ using System.Threading.Tasks;
 
 namespace DTS_Project
 {
-    class Calls
+    [Serializable()]
+    public class Calls
     {
+
         public string _areaCode { get; set; }
         public string _prefix { get; set; }
         public string _lineNumber { get; set; }
@@ -22,9 +24,13 @@ namespace DTS_Project
             endCall = end;
         }
 
-        string ToString(){
-            return (_areaCode + _prefix + _lineNumber).ToString();
-        }
 
+        public string formatCall() => (_areaCode + "-" + _prefix + "-" + _lineNumber + "  Call Time: " +
+        "" + startCall.ToLongTimeString() + " to " + endCall.ToLongTimeString() + " on " + endCall.ToShortDateString());
+
+
+        public string ToString() => (_areaCode + _prefix + _lineNumber).ToString();
+            
+        }
     }
-}
+

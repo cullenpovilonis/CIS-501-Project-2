@@ -11,8 +11,12 @@ namespace DTS_Project
         // The following Initialize() method is called from the DTS constructor
         // Write code in "Initialize()" to make necessary initial connections to 
         // the TelephoneController and TerminalController objects
+
         public static void Initialize(TelephoneController telephoneController, TerminalController terminalController)
         {
+                List<Tenant> newTenants = new List<Tenant>();
+            terminalController.SetTenants(newTenants);
+            telephoneController.Set(terminalController);
         }
     }
 }
